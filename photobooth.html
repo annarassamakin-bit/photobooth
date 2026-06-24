@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Photo Booth Collage</title>
+  <style>
+    body { font-family: Arial; text-align: center; background: #f7f7f7; }
+    video, canvas { max-width: 90%; border-radius: 12px; margin: 10px; }
+    button { padding: 12px 18px; margin: 8px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>Photo Booth</h1>
+
+  <video id="video" autoplay playsinline></video>
+  <br>
+
+  <button onclick="takePhoto()">Take Photo</button>
+  <button onclick="resetPhotos()">Reset</button>
+  <button onclick="downloadCollage()">Download Collage</button>
+
+  <p id="count">Photos taken: 0 / 3</p>
+
+  <canvas id="collage" width="400" height="900"></canvas>
+
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("collage");
+    const ctx = canvas.getContext("2d");
+    const countText = document.getElementById("count");
+
+    let photos = [];
+
+    async function startCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false
+      });
+      video.srcObject = stream;
+    }
+
+    function takePhoto() {
+      if (photos.length >= 3) return;
+
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = 400;
+      tempCanvas.height = 250;
+
+      const tempCtx = tempCanvas.getContext("2d");
+      tempCtx.drawImage(video, 0, 0, 400, 250);
+
+      photos.push(tempCanvas);
+      drawCollage();
+
+      countText.textContent = `Photos taken: ${photos.length} / 3`;
+    }
+
+    function drawCollage() {
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "black";
+      ctx.font = "28px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("PHOTO BOOTH", 200, 45);
+
+      photos.forEach((photo, index) => {
+        const y = 70 + index * 270;
+        ctx.drawImage(photo, 25, y, 350, 230);
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(25, y, 350, 230);
+      });
+    }
+
+    function resetPhotos() {
+      photos = [];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      countText.textContent = "Photos taken: 0 / 3";
+    }
+
+    function downloadCollage() {
+      const link = document.createElement("a");
+      link.download = "photo-booth-collage.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    }
+
+    startCamera();
+    drawCollage();
+  </script>
+</body>
+</html>
